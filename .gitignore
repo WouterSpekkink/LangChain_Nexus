@@ -1,0 +1,6 @@
+.chainlit/
+__pycache__/
+answers/
+constants.py
+data/
+vectorstore/

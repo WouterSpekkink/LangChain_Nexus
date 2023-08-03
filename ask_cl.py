@@ -89,7 +89,6 @@ def main():
   redundant_filter = EmbeddingsRedundantFilter(embeddings=embeddings)
   reordering = LongContextReorder()
   pipeline = DocumentCompressorPipeline(transformers=[redundant_filter, reordering])
-  pipeline = DocumentCompressorPipeline(transformers=[reordering])
   retriever= ContextualCompressionRetriever(
     base_compressor=pipeline, base_retriever=db.as_retriever(search_type="similarity_score_threshold", search_kwargs={"k" : 20, "score_threshold": .75}))
  

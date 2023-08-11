@@ -48,6 +48,39 @@ db = FAISS.load_local("./vectorstore/", embeddings)
 # Set up callback handler
 handler = OpenAICallbackHandler()
 
+# Customize prompt
+system_prompt_template = (
+  '''You help me to extract relevant information from a case description from news items.
+  The context includes extracts from relevant new items in Dutch and English.
+  You help me by answering questions about the topic I wish to write a case description on.
+  Yoy also help me to write parts of my case description of I ask you to do so. 
+  
+  If the context doesn't provide a satisfactory answer, just tell me that and don't try to make something up.
+  Please try to give detailed answers and write your answers as an academic text, unless explicitly told otherwise.
+  
+  """
+  Context: {context}
+  """
+  ''')
+
+system_prompt = PromptTemplate(template=system_prompt_template,
+                               input_variables=["context"])
+
+system_message_prompt = SystemMessagePromptTemplate(prompt = system_prompt)
+human_template = "{question}"
+human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
+chat_prompt = ChatPromptTemplate.from_messages([system_message_prompt, human_message_prompt])
+  
+# Set memory
+memory = ConversationBufferWindowMemory(memory_key="chat_history", input_key='question', output_key='answer', return_messages=True, k = 5)
+
+# Set up retriever
+redundant_filter = EmbeddingsRedundantFilter(embeddings=embeddings)
+reordering = LongContextReorder()
+pipeline = DocumentCompressorPipeline(transformers=[redundant_filter, reordering])
+retriever= ContextualCompressionRetriever(
+  base_compressor=pipeline, base_retriever=db.as_retriever(search_type="similarity_score_threshold", search_kwargs={"k" : 20, "score_threshold": .75}))
+
 # Set up source file
 now = datetime.now()
 timestamp = now.strftime("%Y%m%d_%H%M%S")
@@ -85,40 +118,7 @@ async def setup_chain(settings):
     streaming=settings["Streaming"],
     model=settings["Model"],
   )
-  
-  # Customize prompt
-  system_prompt_template = (
-    '''You help me to extract relevant information from a case description from news items.
-    The context includes extracts from relevant new items in Dutch and English.
-    You help me by answering questions about the topic I wish to write a case description on.
-    Yoy also help me to write parts of my case description of I ask you to do so. 
-    
-    If the context doesn't provide a satisfactory answer, just tell me that and don't try to make something up.
-    Please try to give detailed answers and write your answers as an academic text, unless explicitly told otherwise.
 
-    """
-    Context: {context}
-    """
-    ''')
-
-  system_prompt = PromptTemplate(template=system_prompt_template,
-                                 input_variables=["context"])
-
-  system_message_prompt = SystemMessagePromptTemplate(prompt = system_prompt)
-  human_template = "{question}"
-  human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
-  chat_prompt = ChatPromptTemplate.from_messages([system_message_prompt, human_message_prompt])
-  
-  # Set memory
-  memory = ConversationBufferWindowMemory(memory_key="chat_history", input_key='question', output_key='answer', return_messages=True, k = 5)
-
-  # Set up retriever
-  redundant_filter = EmbeddingsRedundantFilter(embeddings=embeddings)
-  reordering = LongContextReorder()
-  pipeline = DocumentCompressorPipeline(transformers=[redundant_filter, reordering])
-  retriever= ContextualCompressionRetriever(
-    base_compressor=pipeline, base_retriever=db.as_retriever(search_type="similarity_score_threshold", search_kwargs={"k" : 20, "score_threshold": .75}))
- 
   # Set up conversational chain
   chain = ConversationalRetrievalChain.from_llm(
     llm=llm,

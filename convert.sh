@@ -15,7 +15,7 @@ do
     base_name=$(basename "$file" .pdf)
 
     if grep -Fxq "$base_name.txt" "$existing_file"; then
-	echo "Text file for $file already exists, skipping."
+	echo -ne "Text file for $file already exists, skipping.\r"
     else 
 	pdftotext -enc UTF-8 "$file" "$output_dir/$base_name.txt"
 	

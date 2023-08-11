@@ -18,7 +18,7 @@ os.environ["OPENAI_API_KEY"] = constants.APIKEY
 openai.api_key = constants.APIKEY 
 
 # Set paths
-source_path = './data/new/'
+source_path = './data/src/'
 store_path = './vectorstore/'
 destination_file = './data/ingested.txt'
 

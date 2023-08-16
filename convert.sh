@@ -8,9 +8,9 @@ temp_dir="/home/wouter/Documents/LangChain_Projects/Nexis/data/temp"
 
 counter=0
 
-total=$(find /home/wouter/Documents/LangChain_Projects/Nexis/data/Nexis -type f -name "*.pdf" | wc -l)
+total=$(find /home/wouter/Documents/LangChain_Projects/Nexis/data/pdf -type f -name "*.pdf" | wc -l)
 
-find /home/wouter/Documents/LangChain_Projects/Nexis/data/Nexis -type f -name "*.pdf" | while read -r file
+find /home/wouter/Documents/LangChain_Projects/Nexis/data/pdf -type f -name "*.pdf" | while read -r file
 do
     base_name=$(basename "$file" .pdf)
 

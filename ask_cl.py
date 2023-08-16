@@ -96,7 +96,7 @@ async def start():
         id="Model",
         label="OpenAI - Model",
         values=["gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-4", "gpt-4-32k"],
-        initial_index=0,
+        initial_index=1,
       ),
       Switch(id="Streaming", label="OpenAI - Stream Tokens", initial=True),
       Slider(
@@ -111,6 +111,7 @@ async def start():
   ).send()
   await setup_chain(settings)
 
+@cl.on_settings_update
 async def setup_chain(settings):
   # Set llm
   llm=ChatOpenAI(

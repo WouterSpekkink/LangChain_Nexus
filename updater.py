@@ -1,7 +1,8 @@
-from langchain.vectorstores import FAISS
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.document_loaders import DirectoryLoader, TextLoader
+from langchain_community.document_loaders import DirectoryLoader, TextLoader
+from langchain_chroma import Chroma
+import bibtexparser
 import langchain
 import os
 import glob
@@ -9,6 +10,7 @@ from dotenv import load_dotenv
 import openai
 import constants
 import time
+
 
 # Set OpenAI API Key
 load_dotenv()
@@ -45,18 +47,16 @@ text_splitter = RecursiveCharacterTextSplitter(
 
 split_documents = text_splitter.split_documents(documents)
 
-print("===Embedding text and creating database===")
 embeddings = OpenAIEmbeddings(
+    model="text-embedding-3-large",
     show_progress_bar=True,
     request_timeout=60,
 )
 
-new_db = FAISS.from_documents(split_documents, embeddings)
 
-print("===Merging new and old database===")
-old_db = FAISS.load_local(store_path, embeddings)
-old_db.merge_from(new_db)
-old_db.save_local(store_path, "index")
+print("===Embedding text and updating database===")
+old_db = Chroma(persist_directory="./vectorstore", embedding_function=embeddings)
+old_db.add_documents(split_documents)
 
 # Record the files that we have added
 print("===Recording ingested files===")

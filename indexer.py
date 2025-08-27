@@ -1,16 +1,13 @@
-from langchain.vectorstores import FAISS
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_chroma import Chroma
+from langchain_openai import OpenAIEmbeddings
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.document_loaders import DirectoryLoader, TextLoader
-from langchain.schema import Document
-from langchain import OpenAI
+from langchain_community.document_loaders import DirectoryLoader, TextLoader
+import bibtexparser
 import langchain
 import os
-import glob
 from dotenv import load_dotenv
 import openai
 import constants
-import time
 
 # Set OpenAI API Key
 load_dotenv()
@@ -45,13 +42,15 @@ split_documents = text_splitter.split_documents(documents)
 
 # Embedding documents
 print("===Embedding text and creating database===")
+
 embeddings = OpenAIEmbeddings(
+    model="text-embedding-3-large",
     show_progress_bar=True,
     request_timeout=60,
 )
-
-db = FAISS.from_documents(split_documents, embeddings)
-db.save_local(store_path, "index")
+db = Chroma.from_documents(documents=split_documents,
+                           embedding=embeddings,
+                           persist_directory=store_path,)
 
 # Record what we have ingested
 print("===Recording ingested files===")
